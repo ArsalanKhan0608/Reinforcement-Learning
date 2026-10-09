@@ -1,3 +1,4 @@
+from pathlib import Path
 # Import necessary libraries
 import gymnasium as gym
 from stable_baselines3 import DQN
@@ -16,7 +17,7 @@ input_maze = [
 new_env = MazeEnv(input_maze)  # Assuming 'input_maze' is defined or imported
 
 # Load the trained model
-model = DQN.load("/home/arsalan/Desktop/Reinforcement Learning/Dec 4 Task/my_model")
+model = DQN.load(str(Path(__file__).with_name("my_model")))
 
 
 # Test the loaded model

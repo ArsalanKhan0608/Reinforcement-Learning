@@ -1,3 +1,4 @@
+from pathlib import Path
 # Import necessary libraries
 import gymnasium as gym
 import numpy as np
@@ -36,7 +37,7 @@ model = DQN('MlpPolicy', env, verbose=1,
 
 # Train the agent
 model.learn(total_timesteps=20000)
-model.save("/home/arsalan/Desktop/Reinforcement Learning/Dec 4 Task/my_model")
+model.save(str(Path(__file__).with_name("my_model")))
 
 # Test the trained agent
 obs,_ = env.reset()
