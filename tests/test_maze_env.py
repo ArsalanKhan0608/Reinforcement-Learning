@@ -56,3 +56,43 @@ def test_invalid_action_is_rejected(action):
     env = MazeEnv(MAZE)
     with pytest.raises(ValueError):
         env.step(action)
+
+
+@pytest.mark.parametrize("script,operation", [("RLwithDQN.py", "save"), ("loadDQN.py", "load")])
+def test_dqn_model_paths_are_independent_of_working_directory(tmp_path, monkeypatch, script, operation):
+    import runpy
+    import sys
+    import types
+
+    captured = []
+
+    class FakeDQN:
+        def __init__(self, *args, **kwargs):
+            self.actions = iter([1, 1, 3, 3, 3])
+
+        def learn(self, **kwargs):
+            return self
+
+        def save(self, model_path):
+            captured.append(("save", model_path))
+
+        @classmethod
+        def load(cls, model_path):
+            captured.append(("load", model_path))
+            return cls()
+
+        def predict(self, observation, deterministic=True):
+            return next(self.actions), None
+
+    package = types.ModuleType("stable_baselines3")
+    package.DQN = FakeDQN
+    common = types.ModuleType("stable_baselines3.common")
+    checker = types.ModuleType("stable_baselines3.common.env_checker")
+    checker.check_env = lambda env, warn=True: None  # API contract is tested separately above.
+    monkeypatch.setitem(sys.modules, "stable_baselines3", package)
+    monkeypatch.setitem(sys.modules, "stable_baselines3.common", common)
+    monkeypatch.setitem(sys.modules, "stable_baselines3.common.env_checker", checker)
+    monkeypatch.syspath_prepend(str(module_path.parent))
+    monkeypatch.chdir(tmp_path)
+    runpy.run_path(str(module_path.parent / script), run_name="__main__")
+    assert captured == [(operation, str(module_path.parent / "my_model"))]
